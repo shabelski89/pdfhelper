@@ -2,7 +2,7 @@
 
 
 ```shell
-python setup.py
+python setup.py install
 ```
 
 ### Ручная сборка
