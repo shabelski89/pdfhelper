@@ -13,6 +13,7 @@ import argparse
 from datetime import datetime
 from docx2pdf import convert
 import multiprocessing as mp
+from functools import partial
 
 
 def date_time():
@@ -36,7 +37,7 @@ def flatten_list(nested_list):
     return nested_list[:1] + flatten_list(nested_list[1:])
 
 
-def convert_docx2pdf(file):
+def convert_docx2pdf(file, **kwargs):
     """
     Function to convert docx file to pdf
     :param file: name of docx file
@@ -58,28 +59,34 @@ def convert_docx2pdf(file):
         print(E)
 
 
-def main(arguments):
+def main(files, **kwargs):
     """
     Main function
-    :param arguments: cli arguments
+    :param files: cli arguments
     """
     print('#' * 100)
     print(f'[{date_time()}] - Program start')
     start = time.time()
 
     #  make list of files is flat
-    files = [file for file in flatten_list(arguments) if file.endswith('.docx') and os.path.exists(file)]
-    if files:
-        for file in files:
+    files2convert = [file for file in flatten_list(files) if file.endswith('.docx') and os.path.exists(file)]
+    if files2convert:
+        for file in files2convert:
             print(f'[{date_time()}] - Converting file - {file}')
 
-        with mp.Pool() as pool:
-            converted_files = pool.map(convert_docx2pdf, files)
+        multiprocessing = kwargs.get('multiprocessing', False)
+        if multiprocessing:
+            with mp.Pool() as pool:
+                print(f'[{date_time()}] - Converting file with multi processing')
+                converted_files = pool.map(partial(convert_docx2pdf, **kwargs), files2convert)
+        else:
+            print(f'[{date_time()}] - Converting file with single processing')
+            converted_files = [convert_docx2pdf(file=file, **kwargs) for file in files2convert]
 
         for file in converted_files:
             print(f'[{date_time()}] - Converted file - {file}')
     else:
-        print(f'[{date_time()}] - There are no files to converting in {arguments}')
+        print(f'[{date_time()}] - There are no files to converting in {files2convert}')
     end_time = int(time.time() - start)
     print(f"[{date_time()}] - Time elapsed {end_time} seconds")
     print(f'[{date_time()}] - Program end')
@@ -92,5 +99,6 @@ if __name__ == '__main__':
     help_msg = "Docx files converting to PDF files"
     arg_parser = argparse.ArgumentParser(description=desc_msg, formatter_class=argparse.RawTextHelpFormatter)
     arg_parser.add_argument("-i", dest="input", required=True, nargs='+', action='append', help=help_msg)
+    arg_parser.add_argument("-m", dest="multiprocessing", required=False, type=bool, default=False)
     args = arg_parser.parse_args()
     main(args.input)

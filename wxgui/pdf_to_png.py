@@ -13,8 +13,8 @@ import argparse
 from datetime import datetime
 from pdf2image import convert_from_path
 import multiprocessing as mp
-from tqdm import tqdm
 from functools import partial
+from tqdm import tqdm
 
 
 def date_time():
@@ -55,7 +55,7 @@ def convert_pdf2png(file, **kwargs):
     poppler = kwargs.get('poppler', False)
     try:
         if poppler:
-            images = convert_from_path(file, poppler_path=kwargs['poppler'])
+            images = convert_from_path(file, poppler_path=poppler)
         else:
             images = convert_from_path(file)
 
@@ -81,11 +81,12 @@ def main(files, **kwargs):
 
     #  make list of files is flat
     files2convert = [file for file in flatten_list(files) if file.endswith('.pdf') and os.path.exists(file)]
+    print(files2convert)
     if files2convert:
         for file in files2convert:
             print(f'[{date_time()}] - Converting file - {file}')
-
-        if kwargs["multiprocessing"]:
+        multiprocessing = kwargs.get('multiprocessing', False)
+        if multiprocessing:
             with mp.Pool() as pool:
                 print(f'[{date_time()}] - Converting file with multi processing')
                 converted_files = pool.map(partial(convert_pdf2png, **kwargs), files2convert)
@@ -111,6 +112,5 @@ if __name__ == '__main__':
     arg_parser.add_argument("-i", dest="input", required=True, nargs='+', action='append', help=help_msg)
     arg_parser.add_argument("-p", dest="poppler", required=False, default=False, help='poppler path')
     arg_parser.add_argument("-m", dest="multiprocessing", required=False, type=bool, default=False)
-
     args = arg_parser.parse_args()
     main(args.input, poppler=args.poppler, multiprocessing=args.multiprocessing)

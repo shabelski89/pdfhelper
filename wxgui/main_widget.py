@@ -1,6 +1,8 @@
 import os
 import wx
 from ObjectListView import ObjectListView, ColumnDefn
+from wxgui import docx_to_pdf
+from wxgui import pdf_to_png
 
 
 class MainFrame(wx.Frame):
@@ -9,7 +11,7 @@ class MainFrame(wx.Frame):
         self.sb = self.CreateStatusBar()
         panel = MainPanel(self)
 
-    def change_statusbar(self, msg: str):
+    def change_statusbar(self, msg):
         self.sb.SetStatusText(f'Количество файлов: {msg}')
 
 
@@ -65,7 +67,7 @@ class MainPanel(wx.Panel):
         """
         self.data_main_Olv.SetObjects(data)
         count = self.data_main_Olv.ItemCount
-        self.set_status(self, str(count))
+        self.set_status(self, count)
         self.main_table = True
         self.start_btn.Enable()
 
@@ -96,23 +98,28 @@ class MainPanel(wx.Panel):
     def on_start(self, event):
         files_from_olv = [x['filename'] for x in self.data_main_Olv.GetObjects()]
         alert_msg = 'Файлы не могут быть конвертированы:\n'
+        result_msg = 'Файлы cконвертированы:\n'
+        extension = {'docx2pdf': 'docx', 'pdf2png': 'pdf'}
+        app, ext = None, None
         if self.radio1.GetValue():
-            files = [x for x in files_from_olv if x.endswith('docx')]
-            depot_files = [os.path.basename(x) for x in files_from_olv if not x.endswith('docx')]
-            if depot_files:
-                answer = wx.MessageBox(alert_msg + "\n".join(depot_files), "Предупреждение", wx.OK | wx.CANCEL)
-                if answer == wx.OK:
-                    from wxgui import docx_to_pdf
-                    docx_to_pdf.main(files)
+            ext = extension[self.radio1.GetLabel()]
+            app = docx_to_pdf.main
         elif self.radio2.GetValue():
-            files = [x for x in files_from_olv if x.endswith('pdf')]
-            depot_files = [x for x in files_from_olv if not x.endswith('pdf')]
-            if depot_files:
-                answer = wx.MessageBox(alert_msg + "\n".join(depot_files), "Предупреждение", wx.OK | wx.CANCEL)
-                if answer == wx.OK:
-                    from wxgui import pdf_to_png
-                    pdf_to_png.main(files, multiprocessing=True)
+            ext = extension[self.radio2.GetLabel()]
+            app = pdf_to_png.main
+
+        files = [x for x in files_from_olv if x.endswith(ext)]
+        depot_files = [os.path.basename(x) for x in files_from_olv if not x.endswith(ext)]
+
+        if depot_files:
+            answer = wx.MessageBox(alert_msg + "\n".join(depot_files), "Предупреждение", wx.OK | wx.CANCEL)
+            if answer == wx.OK:
+                app(files, multiprocessing=True)
+
+        wx.MessageBox(result_msg + "\n".join(files), "Результат", wx.OK)
 
         #  clear table and disable button
         self.data_main_Olv.DeleteAllItems()
         self.start_btn.Disable()
+        self.set_status(self, 0)
+
