@@ -111,7 +111,7 @@ class MainPanel(wx.Panel):
                 answer = wx.MessageBox(alert_msg + "\n".join(depot_files), "Предупреждение", wx.OK | wx.CANCEL)
                 if answer == wx.OK:
                     from wxgui import pdf_to_png
-                    pdf_to_png.main(files)
+                    pdf_to_png.main(files, multiprocessing=True)
 
         #  clear table and disable button
         self.data_main_Olv.DeleteAllItems()

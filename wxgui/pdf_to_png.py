@@ -14,6 +14,7 @@ from datetime import datetime
 from pdf2image import convert_from_path
 import multiprocessing as mp
 from tqdm import tqdm
+from functools import partial
 
 
 def date_time():
@@ -37,7 +38,7 @@ def flatten_list(nested_list):
     return nested_list[:1] + flatten_list(nested_list[1:])
 
 
-def convert_pdf2png(file):
+def convert_pdf2png(file, **kwargs):
     """
     Function to convert pdf file to png images
     :param file: name of pdf file
@@ -51,13 +52,17 @@ def convert_pdf2png(file):
         os.makedirs(output_path_png, exist_ok=True)
     except Exception as E:
         print(E)
+    poppler = kwargs.get('poppler', False)
     try:
-        images = convert_from_path(file)
+        if poppler:
+            images = convert_from_path(file, poppler_path=kwargs['poppler'])
+        else:
+            images = convert_from_path(file)
 
         output_files = []
-        for i in range(len(images)):
-            out_file = os.path.join(output_path_png, f"{filename.replace('.pdf', '')}_{i}.png")
-            images[i].save(out_file, 'PNG')
+        for i, item in enumerate(images, start=1):
+            out_file = os.path.join(output_path_png, f"{filename.replace('.pdf', '')}-{i:02d}.png")
+            item.save(out_file, 'PNG')
             output_files.append(out_file)
         pbar.update(1)
         return output_files
@@ -65,28 +70,33 @@ def convert_pdf2png(file):
         print(E)
 
 
-def main(arguments):
+def main(files, **kwargs):
     """
     Main function
-    :param arguments: cli arguments
+    :param files: cli arguments
     """
     print('#' * 100)
     print(f'[{date_time()}] - Program start')
     start = time.time()
 
     #  make list of files is flat
-    files = [file for file in flatten_list(arguments) if file.endswith('.pdf') and os.path.exists(file)]
-    if files:
-        for file in files:
+    files2convert = [file for file in flatten_list(files) if file.endswith('.pdf') and os.path.exists(file)]
+    if files2convert:
+        for file in files2convert:
             print(f'[{date_time()}] - Converting file - {file}')
 
-        with mp.Pool() as pool:
-            converted_files = pool.map(convert_pdf2png, files)
+        if kwargs["multiprocessing"]:
+            with mp.Pool() as pool:
+                print(f'[{date_time()}] - Converting file with multi processing')
+                converted_files = pool.map(partial(convert_pdf2png, **kwargs), files2convert)
+        else:
+            print(f'[{date_time()}] - Converting file with single processing')
+            converted_files = [convert_pdf2png(file=file, **kwargs) for file in files2convert]
 
         for files in converted_files:
             print(f'[{date_time()}] - Converted {len(files)} files to folder - {os.path.dirname(files[0])}')
     else:
-        print(f'[{date_time()}] - There are no files to converting in {arguments}')
+        print(f'[{date_time()}] - There are no files to converting in {files}')
     end_time = int(time.time() - start)
     print(f"[{date_time()}] - Time elapsed {end_time} seconds")
     print(f'[{date_time()}] - Program end')
@@ -99,5 +109,8 @@ if __name__ == '__main__':
     help_msg = "PDF files converting to PNG files"
     arg_parser = argparse.ArgumentParser(description=desc_msg, formatter_class=argparse.RawTextHelpFormatter)
     arg_parser.add_argument("-i", dest="input", required=True, nargs='+', action='append', help=help_msg)
+    arg_parser.add_argument("-p", dest="poppler", required=False, default=False, help='poppler path')
+    arg_parser.add_argument("-m", dest="multiprocessing", required=False, type=bool, default=False)
+
     args = arg_parser.parse_args()
-    main(args.input)
+    main(args.input, poppler=args.poppler, multiprocessing=args.multiprocessing)
