@@ -15,15 +15,6 @@ class MainFrame(wx.Frame):
         self.sb.SetStatusText(f'Количество файлов: {msg}')
 
 
-class MessageBox(wx.Dialog):
-    def __init__(self, parent, title):
-        wx.Dialog.__init__(self, parent, title=title)
-        text = wx.TextCtrl(self, style=wx.TE_READONLY | wx.BORDER_NONE)
-        text.SetBackgroundColour(self.GetBackgroundColour())
-        self.ShowModal()
-        self.Destroy()
-
-
 class MainPanel(wx.Panel):
     wildcard = "All files (*.*)|*.*|" "MS Word files (*.docx)|*.docx|" "PDF files (*.pdf)|*.pdf"
     headers = {'path': '', 'filename': '', 'extension': '', 'size': ''}

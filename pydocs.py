@@ -13,7 +13,7 @@ import multiprocessing
 
 
 class GenApp(wx.App):
-    def __init__(self, redirect=False, filename=None):
+    def __init__(self, redirect=True, filename=None):
         wx.App.__init__(self, redirect, filename)
 
     def OnInit(self):
