@@ -15,6 +15,15 @@ class MainFrame(wx.Frame):
         self.sb.SetStatusText(f'Количество файлов: {msg}')
 
 
+class MessageBox(wx.Dialog):
+    def __init__(self, parent, title):
+        wx.Dialog.__init__(self, parent, title=title)
+        text = wx.TextCtrl(self, style=wx.TE_READONLY | wx.BORDER_NONE)
+        text.SetBackgroundColour(self.GetBackgroundColour())
+        self.ShowModal()
+        self.Destroy()
+
+
 class MainPanel(wx.Panel):
     wildcard = "All files (*.*)|*.*|" "MS Word files (*.docx)|*.docx|" "PDF files (*.pdf)|*.pdf"
     headers = {'path': '', 'filename': '', 'extension': '', 'size': ''}
@@ -36,6 +45,8 @@ class MainPanel(wx.Panel):
         self.start_btn = wx.Button(self, label="Конвертировать")
         self.start_btn.Bind(wx.EVT_BUTTON, self.on_start)
         self.start_btn.Disable()
+        self.checkbox = wx.CheckBox(self, label="Multiprocessing")
+        # self.Bind(wx.EVT_CHECKBOX, self.onChecked)
 
         # Create sizers
         main_sizer = wx.BoxSizer(wx.VERTICAL)
@@ -45,6 +56,7 @@ class MainPanel(wx.Panel):
         button_sizer.Add(self.radio1, proportion=0, flag=wx.ALL | wx.EXPAND, border=8)
         button_sizer.Add(self.radio2, proportion=0, flag=wx.ALL | wx.EXPAND, border=8)
         button_sizer.Add(self.start_btn, proportion=0, flag=wx.ALL | wx.EXPAND, border=8)
+        button_sizer.Add(self.checkbox, proportion=0, flag=wx.ALL | wx.EXPAND, border=8)
         main_sizer.Add(button_sizer, proportion=0, flag=wx.ALL | wx.EXPAND, border=8)
 
         table_sizer = wx.BoxSizer(wx.VERTICAL)
@@ -114,9 +126,9 @@ class MainPanel(wx.Panel):
         if depot_files:
             answer = wx.MessageBox(alert_msg + "\n".join(depot_files), "Предупреждение", wx.OK | wx.CANCEL)
             if answer == wx.OK:
-                app(files, multiprocessing=True)
-
-        wx.MessageBox(result_msg + "\n".join(files), "Результат", wx.OK)
+                multiprocessing = self.checkbox.GetValue()
+                app(files, multiprocessing=multiprocessing)
+                wx.LogMessage(result_msg + "\n".join(files))
 
         #  clear table and disable button
         self.data_main_Olv.DeleteAllItems()
