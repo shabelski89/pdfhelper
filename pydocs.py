@@ -2,28 +2,36 @@
 Provides to convert docx file(s) into pdf using docx2pdf
 """
 __author__ = "Aleksandr Shabelsky"
-__version__ = "1.0.0"
+__version__ = "0.9.0"
 __email__ = "a.shabelsky@gmail.com"
-# Requirement docx2pdf: pip install docx2pdf
-# Usage python docx_to_pdf.py -i file1.docx file2.docx
 
-import wx
-from wxgui.main_widget import MainFrame
-import multiprocessing
+import cmd
+import sys
 
 
-class GenApp(wx.App):
-    def __init__(self, redirect=True, filename=None):
-        wx.App.__init__(self, redirect, filename)
+class PydocsCmd(cmd.Cmd):
+    intro = 'Welcome to the pydocs shell.\nType help or ? to list commands.\n'
+    prompt = '(pydocs) '
 
-    def OnInit(self):
-        frame = MainFrame()
-        frame.Center()
-        frame.Show()
-        return True
+    def do_wx(self, arg):
+        """Run pydocs in wxPython GUI"""
+        from wxgui import wx_gui
+        wx_gui.main()
+        return self
+
+    def do_tk(self, line):
+        """Run pydocs in Tkinter GUI"""
+        return self
+
+    def do_exit(self, line):
+        """Exit and close program"""
+        return self
 
 
-if __name__ == "__main__":
-    multiprocessing.freeze_support()
-    app = GenApp(redirect=False)
-    app.MainLoop()
+if __name__ == '__main__':
+    my_cmd = PydocsCmd()
+
+    if len(sys.argv) > 1:
+        my_cmd.onecmd(' '.join(sys.argv[1:]))
+    else:
+        my_cmd.cmdloop()

@@ -1,8 +1,7 @@
 import os
 import wx
 from ObjectListView import ObjectListView, ColumnDefn
-from wxgui import docx_to_pdf
-from wxgui import pdf_to_png
+from converter import docx_to_pdf, pdf_to_png
 
 
 class MainFrame(wx.Frame):
@@ -69,8 +68,7 @@ class MainPanel(wx.Panel):
         Push data to OLV table
         """
         self.data_main_Olv.SetObjects(data)
-        count = self.data_main_Olv.ItemCount
-        self.set_status(self, count)
+        self.set_status(self, self.data_main_Olv.GetItemCount())
         self.main_table = True
         self.start_btn.Enable()
 
@@ -124,5 +122,5 @@ class MainPanel(wx.Panel):
         #  clear table and disable button
         self.data_main_Olv.DeleteAllItems()
         self.start_btn.Disable()
-        self.set_status(self, 0)
+        self.set_status(self, self.data_main_Olv.GetItemCount())
 
