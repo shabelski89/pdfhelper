@@ -123,4 +123,3 @@ class MainPanel(wx.Panel):
         self.data_main_Olv.DeleteAllItems()
         self.start_btn.Disable()
         self.set_status(self, self.data_main_Olv.GetItemCount())
-

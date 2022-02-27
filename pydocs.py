@@ -10,7 +10,7 @@ import sys
 
 
 class PydocsCmd(cmd.Cmd):
-    intro = 'Welcome to the pydocs shell.\nType help or ? to list commands.\n'
+    intro = 'Welcome to the pydocs shell.\nType help or ? to list commands.\nInput tk or wx to run GUI'
     prompt = '(pydocs) '
 
     def do_wx(self, arg):
@@ -21,6 +21,8 @@ class PydocsCmd(cmd.Cmd):
 
     def do_tk(self, line):
         """Run pydocs in Tkinter GUI"""
+        from tkgui import tk_gui
+        tk_gui.main()
         return self
 
     def do_exit(self, line):
