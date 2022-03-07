@@ -2,9 +2,10 @@
 Provides to insert png file(s) into docx using docx
 """
 __author__ = "Aleksandr Shabelsky"
-__version__ = "0.5.0"
+__version__ = "1.0.0"
 __email__ = "a.shabelsky@gmail.com"
 __status__ = "Dev"
+
 # Requirement pdf2image: pip install python-docx
 # Usage python png_to_docx.py -i file1.docx=file1_png_folder
 
@@ -75,7 +76,6 @@ def get_sorted_dict(files: list):
 
 
 def png2docx(docx_file: str, png_files: dict):
-
     doc = docx.Document(docx_file)
 
     picture_width = 148
@@ -87,30 +87,27 @@ def png2docx(docx_file: str, png_files: dict):
     paragraph_index = 0
     for paragraph in doc.paragraphs:
         paragraph_index += 1
-        if paragraph_index > 1 and paragraph_index < 4:
+        if 1 < paragraph_index < 4:
             continue
-        if picture_num == len(png_files):
-            paragraph.add_run().add_break(docx.enum.text.WD_BREAK.PAGE)
-            picture_num += 1
-            continue
-        elif picture_num > len(png_files):
-            paragraph = paragraph._element
-            paragraph.getparent().remove(paragraph)
-            paragraph._p = paragraph._element = None
-            continue
-
-        # paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-
-        run = paragraph.add_run()
-        run.add_picture(png_files[picture_num],
-                        width=docx.shared.Mm(picture_width),
-                        height=docx.shared.Mm(pictute_height))
+        if picture_num >= len(png_files):
+            if picture_num == 0:
+                paragraph.add_run().add_break(docx.enum.text.WD_BREAK.PAGE)
+        else:
+            paragraph.alignment = docx.enum.text.WD_PARAGRAPH_ALIGNMENT.CENTER
+            run = paragraph.add_run()
+            run.add_picture(png_files[picture_num],
+                            width=docx.shared.Mm(picture_width),
+                            height=docx.shared.Mm(pictute_height))
 
         picture_num += 1
 
+    for table in doc.tables:
+        paragraph = doc.add_paragraph()
+        table._element.addprevious(paragraph._p)
+        run = paragraph.add_run()
+        run.add_break(docx.enum.text.WD_BREAK.PAGE)
+
     export_path = os.path.join(pictures_dirname, "Edited")
-    print(pictures_dirname)
-    print(export_path)
 
     try:
         os.makedirs(export_path, exist_ok=True)
