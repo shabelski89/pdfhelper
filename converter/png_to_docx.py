@@ -26,8 +26,6 @@ def parse_var(s):
     That's the reverse of ShellArgs.
     On the command line (argparse) a declaration will typically look like:
         foo=hello
-    or
-        foo="hello world"
     """
     items = s.split('=')
     key = items[0].strip()
@@ -43,8 +41,12 @@ def parse_vars(items):
     d = {}
     if items and isinstance(items, list):
         for item in items:
-            key, value = parse_var(item)
-            d[key] = value
+            try:
+                key, value = parse_var(item)
+                d[key] = value
+            except TypeError as e:
+                print(help_msg)
+                exit(1)
     return d
 
 
@@ -64,7 +66,7 @@ def get_sorted_dict(files: list):
     img_dict = {}
     for filename in files:
         if filename.endswith('.png'):
-            num_index = filename.rfind('_') + 1
+            num_index = filename.rfind('-') + 1
             ext_index = filename.rfind('.png')
             num = filename[num_index:ext_index]
             try:
@@ -79,25 +81,32 @@ def png2docx(docx_file: str, png_files: dict):
     doc = docx.Document(docx_file)
 
     picture_width = 148
-    pictute_height = 210
-
-    pictures_dirname = os.path.dirname(png_files[0])
+    picture_height = 210
+    pictures_dirname = os.path.dirname(png_files[1])
 
     picture_num = 0
     paragraph_index = 0
+
     for paragraph in doc.paragraphs:
         paragraph_index += 1
+
         if 1 < paragraph_index < 4:
             continue
+
         if picture_num >= len(png_files):
             if picture_num == 0:
                 paragraph.add_run().add_break(docx.enum.text.WD_BREAK.PAGE)
+
+            paragraph = paragraph._element
+            paragraph.getparent().remove(paragraph)
+            paragraph._p = paragraph._element = None
+
         else:
             paragraph.alignment = docx.enum.text.WD_PARAGRAPH_ALIGNMENT.CENTER
-            run = paragraph.add_run()
-            run.add_picture(png_files[picture_num],
-                            width=docx.shared.Mm(picture_width),
-                            height=docx.shared.Mm(pictute_height))
+            my_run = paragraph.add_run()
+            my_run.add_picture(png_files[picture_num + 1],
+                               width=docx.shared.Mm(picture_width),
+                               height=docx.shared.Mm(picture_height))
 
         picture_num += 1
 
@@ -159,7 +168,7 @@ if __name__ == '__main__':
     Set a number of key-value pairs 
     (do not put spaces before or after the = sign). 
     If a value contains spaces, you should define it with double quotes: 
-    'file1.docx'='file1_png_images_folder' 
+    'file1.docx=file1_png_images_folder' 
     Note that values are always treated as strings.
     """
     arg_parser = argparse.ArgumentParser(description=desc_msg, formatter_class=argparse.RawTextHelpFormatter)
