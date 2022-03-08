@@ -44,7 +44,7 @@ def parse_vars(items):
             try:
                 key, value = parse_var(item)
                 d[key] = value
-            except TypeError as e:
+            except TypeError:
                 print(help_msg)
                 exit(1)
     return d
@@ -82,7 +82,6 @@ def png2docx(docx_file: str, png_files: dict):
 
     picture_width = 148
     picture_height = 210
-    pictures_dirname = os.path.dirname(png_files[1])
 
     picture_num = 0
     paragraph_index = 0
@@ -116,7 +115,7 @@ def png2docx(docx_file: str, png_files: dict):
         run = paragraph.add_run()
         run.add_break(docx.enum.text.WD_BREAK.PAGE)
 
-    export_path = os.path.join(pictures_dirname, "Edited")
+    export_path = os.path.join(os.path.dirname(docx_file), "Edited")
 
     try:
         os.makedirs(export_path, exist_ok=True)
