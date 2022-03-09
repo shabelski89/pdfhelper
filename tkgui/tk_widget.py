@@ -3,7 +3,7 @@ from tkinter import *
 from tkinter.ttk import Treeview, Style
 from tkinter import filedialog as fd
 from tkinter.messagebox import showinfo
-from converter import docx_to_pdf, pdf_to_png
+from converter import docx_to_pdf, pdf_to_png, png_to_docx
 
 
 class InterFace:
@@ -26,18 +26,23 @@ class InterFace:
         self.root.btn_open.grid(row=0, column=0, pady=6, padx=6, sticky='w')
 
         self.root.radio_var = StringVar()
-        self.root.radio_btn_1 = Radiobutton(self.root.frame_top, text='docx2pdf', variable=self.root.radio_var, value='docx2pdf')
+        self.root.radio_btn_1 = Radiobutton(self.root.frame_top, text='docx2pdf',
+                                            variable=self.root.radio_var, value='docx2pdf')
         self.root.radio_btn_1.grid(row=0, column=1, pady=6, padx=2)
-        self.root.radio_btn_2 = Radiobutton(self.root.frame_top, text='pdf2png', variable=self.root.radio_var, value='pdf2png')
+        self.root.radio_btn_2 = Radiobutton(self.root.frame_top, text='pdf2png',
+                                            variable=self.root.radio_var, value='pdf2png')
         self.root.radio_btn_2.grid(row=0, column=2, pady=6, padx=2)
+        self.root.radio_btn_3 = Radiobutton(self.root.frame_top, text='png2docx',
+                                            variable=self.root.radio_var, value='png2docx')
+        self.root.radio_btn_3.grid(row=0, column=3, pady=6, padx=2)
         self.root.radio_var.set('docx2pdf')
 
         self.root.btn_start = Button(self.root.frame_top, text="Конвертировать", command=self.on_start, state=DISABLED)
-        self.root.btn_start.grid(row=0, column=3, pady=6, padx=6)
+        self.root.btn_start.grid(row=0, column=4, pady=6, padx=6)
 
         self.root.var = IntVar()
         self.root.check_box = Checkbutton(self.root.frame_top, text="Multiprocessing", variable=self.root.var)
-        self.root.check_box.grid(row=0, column=4, pady=6, padx=6)
+        self.root.check_box.grid(row=0, column=5, pady=6, padx=6)
 
         self.root.style = Style(self.root)
         self.root.style.configure('Treeview', rowheight=36)
@@ -64,8 +69,8 @@ class InterFace:
                            for child in self.root.tree.get_children()]
         alert_msg = 'Файлы не могут быть конвертированы:\n'
         result_msg = 'Файлы cконвертированы:\n'
-        extension = {'docx2pdf': 'docx', 'pdf2png': 'pdf'}
-        apps = {'docx2pdf': docx_to_pdf.main, 'pdf2png': pdf_to_png.main}
+        extension = {'docx2pdf': 'docx', 'pdf2png': 'pdf', 'png2docx': 'docx'}
+        apps = {'docx2pdf': docx_to_pdf.main, 'pdf2png': pdf_to_png.main, 'png2docx': png_to_docx.main}
         ext = extension[self.root.radio_var.get()]
         app = apps[self.root.radio_var.get()]
 
