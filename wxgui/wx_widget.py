@@ -1,14 +1,17 @@
 import os
+import sys
 import wx
 from ObjectListView import ObjectListView, ColumnDefn
-from converter import docx_to_pdf, pdf_to_png
+from converter import docx_to_pdf, pdf_to_png, png_to_docx
 
 
 class MainFrame(wx.Frame):
     def __init__(self):
-        wx.Frame.__init__(self, parent=None, id=wx.ID_ANY, title="Конвертер", size=(950, 500))
+        wx.Frame.__init__(self, parent=None, id=wx.ID_ANY,
+                          title=os.path.basename(sys.argv[0].replace(".py", "")), size=(950, 500))
         self.sb = self.CreateStatusBar()
         panel = MainPanel(self)
+        panel.set_status(self, '')
 
     def change_statusbar(self, msg):
         self.sb.SetStatusText(f'Количество файлов: {msg}')
@@ -31,7 +34,8 @@ class MainPanel(wx.Panel):
         self.open_file_dlg_btn = wx.Button(self, label="Открыть файлы...")
         self.open_file_dlg_btn.Bind(wx.EVT_BUTTON, self.on_open_file)
         self.radio1 = wx.RadioButton(self, label="docx2pdf", name='docx2pdf', style=wx.RB_GROUP)
-        self.radio2 = wx.RadioButton(self, label="pdf2png", name='pdf2png', )
+        self.radio2 = wx.RadioButton(self, label="pdf2png", name='pdf2png')
+        self.radio3 = wx.RadioButton(self, label="png2docx", name='png2docx')
         self.start_btn = wx.Button(self, label="Конвертировать")
         self.start_btn.Bind(wx.EVT_BUTTON, self.on_start)
         self.start_btn.Disable()
@@ -45,6 +49,7 @@ class MainPanel(wx.Panel):
         button_sizer.Add(self.open_file_dlg_btn, proportion=0, flag=wx.ALL | wx.EXPAND, border=8)
         button_sizer.Add(self.radio1, proportion=0, flag=wx.ALL | wx.EXPAND, border=8)
         button_sizer.Add(self.radio2, proportion=0, flag=wx.ALL | wx.EXPAND, border=8)
+        button_sizer.Add(self.radio3, proportion=0, flag=wx.ALL | wx.EXPAND, border=8)
         button_sizer.Add(self.start_btn, proportion=0, flag=wx.ALL | wx.EXPAND, border=8)
         button_sizer.Add(self.checkbox, proportion=0, flag=wx.ALL | wx.EXPAND, border=8)
         main_sizer.Add(button_sizer, proportion=0, flag=wx.ALL | wx.EXPAND, border=8)
@@ -100,7 +105,7 @@ class MainPanel(wx.Panel):
         files_from_olv = [x['filename'] for x in self.data_main_Olv.GetObjects()]
         alert_msg = 'Файлы не могут быть конвертированы:\n'
         result_msg = 'Файлы cконвертированы:\n'
-        extension = {'docx2pdf': 'docx', 'pdf2png': 'pdf'}
+        extension = {'docx2pdf': 'docx', 'pdf2png': 'pdf', 'png2docx': 'docx'}
         app, ext = None, None
         if self.radio1.GetValue():
             ext = extension[self.radio1.GetLabel()]
@@ -108,16 +113,19 @@ class MainPanel(wx.Panel):
         elif self.radio2.GetValue():
             ext = extension[self.radio2.GetLabel()]
             app = pdf_to_png.main
-
+        elif self.radio3.GetValue():
+            ext = extension[self.radio3.GetLabel()]
+            app = png_to_docx.main
         files = [x for x in files_from_olv if x.endswith(ext)]
         depot_files = [os.path.basename(x) for x in files_from_olv if not x.endswith(ext)]
 
         if depot_files:
-            answer = wx.MessageBox(alert_msg + "\n".join(depot_files), "Предупреждение", wx.OK | wx.CANCEL)
-            if answer == wx.OK:
-                multiprocessing = self.checkbox.GetValue()
-                app(files, multiprocessing=multiprocessing)
-                wx.LogMessage(result_msg + "\n".join(files))
+            wx.MessageBox(alert_msg + "\n".join(depot_files), "Предупреждение", wx.OK)
+
+        if files:
+            multiprocessing = self.checkbox.GetValue()
+            app(files, multiprocessing=multiprocessing)
+            wx.LogMessage(result_msg + "\n".join(files))
 
         #  clear table and disable button
         self.data_main_Olv.DeleteAllItems()
