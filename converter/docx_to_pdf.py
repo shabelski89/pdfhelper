@@ -2,7 +2,7 @@
 Provides to convert docx file(s) into pdf using docx2pdf
 """
 __author__ = "Aleksandr Shabelsky"
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 __email__ = "a.shabelsky@gmail.com"
 # Requirement docx2pdf: pip install docx2pdf
 # Usage python docx_to_pdf.py -i file1.docx file2.docx
@@ -62,7 +62,8 @@ def convert_docx2pdf(file, **kwargs):
 def main(files, **kwargs):
     """
     Main function
-    :param files: cli arguments
+    :param files: files to convert from pdf to png
+    :param kwargs:
     """
     print('#' * 100)
     print(f'[{date_time()}] - Program start')

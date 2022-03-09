@@ -2,7 +2,7 @@
 Provides to convert pdf file(s) into png image using pdf2image
 """
 __author__ = "Aleksandr Shabelsky"
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 __email__ = "a.shabelsky@gmail.com"
 # Requirement pdf2image: pip install pdf2image
 # Usage python pdf_to_png.py -i file1.pdf file2.pdf
@@ -73,7 +73,8 @@ def convert_pdf2png(file, **kwargs):
 def main(files, **kwargs):
     """
     Main function
-    :param files: cli arguments
+    :param files: files to convert from pdf to png
+    :param kwargs:
     """
     print('#' * 100)
     print(f'[{date_time()}] - Program start')

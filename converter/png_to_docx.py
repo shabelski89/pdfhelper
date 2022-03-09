@@ -2,12 +2,12 @@
 Provides to insert png file(s) into docx using docx
 """
 __author__ = "Aleksandr Shabelsky"
-__version__ = "1.0.0"
+__version__ = "1.2.0"
 __email__ = "a.shabelsky@gmail.com"
 __status__ = "Dev"
 
 # Requirement pdf2image: pip install python-docx
-# Usage python png_to_docx.py -i file1.docx=file1_png_folder
+# Usage python png_to_docx.py -i 'file1.docx=file1_img_dir'
 
 import os
 import time
@@ -20,7 +20,7 @@ import multiprocessing as mp
 from pprint import pprint
 
 
-def parse_var(s):
+def parse_var(s) -> tuple:
     """
     Parse a key, value pair, separated by '='
     That's the reverse of ShellArgs.
@@ -34,35 +34,45 @@ def parse_var(s):
         return key, value
 
 
-def parse_vars(items):
+def parse_vars(items) -> dict:
     """
     Parse a series of key-value pairs and return a dictionary
+    :param: items from cli
+    :return: dict of key-value pairs
     """
     d = {}
     if items and isinstance(items, list):
         for item in items:
             try:
-                key, value = parse_var(item)
+                key, value = parse_var(item[0])
                 d[key] = value
             except TypeError:
                 print(help_msg)
-                exit(1)
     return d
 
 
-def date_time():
+def date_time() -> str:
     """
     Function return string formatted datetime
-    :return: str
+    :return: str of datetime.now()
     """
     return datetime.now().strftime('%d.%m.%Y %H:%M:%S')
 
 
-def get_files_list(path: str):
+def get_files_list(path: str) -> list:
+    """
+    Function return list of files in path
+    :param: path of files
+    :return: list
+    """
     return [os.path.join(path, f) for f in os.listdir(path)]
 
 
-def get_sorted_dict(files: list):
+def get_sorted_dict(files: list) -> dict:
+    """
+    Function return string formatted datetime
+    :param: files
+    """
     img_dict = {}
     for filename in files:
         if filename.endswith('.png'):
@@ -77,8 +87,14 @@ def get_sorted_dict(files: list):
     return img_dict
 
 
-def png2docx(docx_file: str, png_files: dict):
+def png2docx(files: tuple) -> str:
+    """
+    Function return string formatted datetime
+    :param: docx_file
+    """
+    docx_file, png_folder = files
     doc = docx.Document(docx_file)
+    png_files = get_sorted_dict(get_files_list(png_folder))
 
     picture_width = 148
     picture_height = 210
@@ -127,32 +143,40 @@ def png2docx(docx_file: str, png_files: dict):
     return docx_rendered_file
 
 
-def main(arguments):
+def main(files, **kwargs):
     """
     Main function
-    :param arguments: cli arguments
+    :param files: files to convert from pdf to png
+    :param kwargs:
     """
     print('#' * 100)
     print(f'[{date_time()}] - Program start')
     start = time.time()
 
     #  make dicts {file.docx:{number: png_file_number}}
-    compared_files = {k: get_sorted_dict(get_files_list(v)) for k, v in arguments.items()
+    compared_files = {k: get_sorted_dict(get_files_list(v)) for k, v in files.items()
                       if os.path.exists(k) and os.path.exists(v) and get_sorted_dict(get_files_list(v))}
     if compared_files.values():
-
         print(f'[{date_time()}] - Insert PNG to DOCX')
+
+        #  make list of tuples [(file, img_path)]
+        compared_files = [(k, v) for k, v in files.items()]
         pprint(compared_files)
 
-        for f, img in compared_files.items():
+        multiprocessing = kwargs.get('multiprocessing', False)
+        if multiprocessing:
             with mp.Pool() as pool:
-                converted_files = pool.starmap(png2docx, [(f, img)])
+                print(f'[{date_time()}] - Converting file with multi processing')
+                converted_files = pool.map(png2docx, compared_files)
+        else:
+            print(f'[{date_time()}] - Converting file with single processing')
+            converted_files = [png2docx(files=files) for files in compared_files]
 
         for file in converted_files:
             print(f'[{date_time()}] - Converted file - {file}')
     else:
         print(f'[{date_time()}] - There are no files to converting')
-        pprint(arguments)
+        pprint(files)
 
     end_time = int(time.time() - start)
     print(f"[{date_time()}] - Time elapsed {end_time} seconds")
@@ -167,14 +191,15 @@ if __name__ == '__main__':
     Set a number of key-value pairs 
     (do not put spaces before or after the = sign). 
     If a value contains spaces, you should define it with double quotes: 
-    'file1.docx=file1_png_images_folder' 
+    -i 'file1.docx=file1_img_dir' -i 'file2.docx=file2_img_dir'
     Note that values are always treated as strings.
     """
     arg_parser = argparse.ArgumentParser(description=desc_msg, formatter_class=argparse.RawTextHelpFormatter)
-    arg_parser.add_argument("-i", dest="input", metavar="KEY=VALUE", nargs='+', help=help_msg)
+    arg_parser.add_argument("-i", dest="input", metavar="KEY=VALUE", nargs='+', action='append', help=help_msg)
+    arg_parser.add_argument("-m", dest="multiprocessing", required=False, type=bool, default=False)
     args = arg_parser.parse_args()
     values = parse_vars(args.input)
     if values:
-        main(values)
+        main(values, multiprocessing=args.multiprocessing)
     else:
         print(help_msg)
