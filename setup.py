@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='pdfhelper',
-    version='1.0.0',
+    version='1.1.0',
     packages=['wxgui'],
     url='https://github.com/shabelski89/pdfhelper',
     license='',

@@ -1,8 +1,5 @@
 import wx
 from wxgui.wx_widget import MainFrame
-import multiprocessing
-
-multiprocessing.freeze_support()
 
 
 class GenApp(wx.App):

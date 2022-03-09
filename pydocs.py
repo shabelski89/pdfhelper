@@ -2,11 +2,15 @@
 Provides to convert docx file(s) into pdf using docx2pdf
 """
 __author__ = "Aleksandr Shabelsky"
-__version__ = "0.9.0"
+__version__ = "1.1.0"
 __email__ = "a.shabelsky@gmail.com"
+
+# Requirements in requirements.txt
+# Usage 'python pydocs.py' or make exe 'pyinstaller --onefile pydocs.py'
 
 import cmd
 import sys
+import multiprocessing
 
 
 class PydocsCmd(cmd.Cmd):
@@ -31,6 +35,7 @@ class PydocsCmd(cmd.Cmd):
 
 
 if __name__ == '__main__':
+    multiprocessing.freeze_support()
     my_cmd = PydocsCmd()
 
     if len(sys.argv) > 1:
